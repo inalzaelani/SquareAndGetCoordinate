@@ -1,11 +1,11 @@
 package com.example.buatkotak;
 
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.RectF;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
@@ -15,6 +15,9 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,13 +26,13 @@ public class MainActivity extends AppCompatActivity {
     private ImageView drawingView;
     private Bitmap bitmap;
     private Canvas canvas;
-    private Path path;
     private Paint strokePaint;
     private Paint fillPaint;
 
     private float startX, startY;
-    private List<String> coordinateList;
+    private Path path;
 
+    private List<String> coordinateList;
     private List<Path> paths;
 
     @SuppressLint("ClickableViewAccessibility")
@@ -39,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         drawingView = findViewById(R.id.drawingView);
+        drawingView.setVisibility(View.INVISIBLE);
+//        drawingView.setTranslationX(-drawingView.getWidth());
 
         WindowManager windowManager = getWindowManager();
         Display display = windowManager.getDefaultDisplay();
@@ -48,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
         bitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
         canvas = new Canvas(bitmap);
         drawingView.setImageBitmap(bitmap);
+
 
         path = new Path();
         strokePaint = new Paint();
@@ -59,10 +65,27 @@ public class MainActivity extends AppCompatActivity {
         fillPaint = new Paint();
         fillPaint.setAntiAlias(true);
         fillPaint.setStyle(Paint.Style.FILL);
-        fillPaint.setColor(0xFFFFFF00); // Warna kuning (0xFFFFFF00)
+        fillPaint.setColor(0xFFFFFF00);
 
         coordinateList = new ArrayList<>();
         paths = new ArrayList<>();
+
+
+        coordinateList.add("100;100;120;100");
+        coordinateList.add("300;100;100;100");
+        coordinateList.add("500;100;100;100");
+        coordinateList.add("700;100;100;100");
+        coordinateList.add("900;100;100;100");
+
+        coordinateList.add("100;300;100;100");
+        coordinateList.add("300;300;100;100");
+        coordinateList.add("500;300;100;100");
+        coordinateList.add("700;300;100;100");
+        coordinateList.add("900;300;100;100");
+
+
+
+        drawSquares();
 
         drawingView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -88,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
                     case MotionEvent.ACTION_UP:
                         canvas.drawPath(path, strokePaint);
-                        canvas.drawPath(path, fillPaint); // Mengisi warna kuning pada dalam persegi
+                        canvas.drawPath(path, fillPaint);
                         String coordinate = x+";"+ y;
                         coordinateList.add(coordinate);
                         paths.add(path);
@@ -101,12 +124,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
         Button saveButton = findViewById(R.id.saveButton);
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 for (String coordinate : coordinateList) {
-                    Log.d("SavedCoordinates" , coordinate);
+                    Log.d("SavedCoordinates", coordinate);
                 }
             }
         });
@@ -121,6 +145,18 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        FloatingActionButton fabShowDrawing = findViewById(R.id.fabShowDrawing);
+        fabShowDrawing.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Animasi untuk memunculkan ImageView dari kiri
+                ObjectAnimator animator = ObjectAnimator.ofFloat(drawingView, "translationX", -drawingView.getWidth(), 0);
+                drawingView.setVisibility(View.VISIBLE);
+                animator.setDuration(500);
+                animator.start();
+            }
+        });
     }
 
     private void clearCanvas() {
@@ -129,6 +165,34 @@ public class MainActivity extends AppCompatActivity {
             canvas.drawPath(p, strokePaint);
             canvas.drawPath(p, fillPaint);
         }
+        drawingView.invalidate();
+    }
+
+    private void drawSquares() {
+        for (String coordinate : coordinateList) {
+            String[] parts = coordinate.split(";");
+            if (parts.length == 4) {
+                float x = Float.parseFloat(parts[0]);
+                float y = Float.parseFloat(parts[1]);
+                float length = Float.parseFloat(parts[2]);
+                float width = Float.parseFloat(parts[3]);
+
+                drawSquare(x, y, length, width);
+            }
+        }
+    }
+
+    private void drawSquare(float x, float y, float length, float width) {
+        Path squarePath = new Path();
+        squarePath.addRect(x, y, x + length, y + width, Path.Direction.CCW);
+//
+
+        canvas.drawPath(squarePath, strokePaint);
+        canvas.drawPath(squarePath, fillPaint);
+
+
+        paths.add(squarePath);
+
         drawingView.invalidate();
     }
 }
